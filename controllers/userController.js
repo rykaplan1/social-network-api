@@ -1,4 +1,5 @@
 const { User, Thought } = require('../models');
+const { Types } = require('mongoose');
 
 module.exports = {
   //GET all users
@@ -9,14 +10,17 @@ module.exports = {
   },
   //GET single user
   getSingleUser(req, res) {
-    User.findOne({ _id: req.params.userId })
+    User.findOne({ _id: Types.ObjectId(req.params.userId) })
       .select('-__v')
-      .then((user) => !user ? res.status(404).json({ message: 'No user with that ID'}) : res.json({
+      .then(async (user) => {
+      const thoughts = await Thought.find({ username: user.username })
+      const friends = await User.find({ _id: { $in: user.friends}})
+      return !user ? res.status(404).json({ message: 'No user with that ID'}) : res.json({
         user, 
-        thoughts: await Thought.find({ username: user.username}),
-        friends: await User.find({ _id: { $in: user.friends}})
+        thoughts: thoughts,
+        friends: friends
       })
-      )
+    })
       .catch((err) => res.status(500).json(err));
   },
   //POST new user
@@ -31,7 +35,7 @@ module.exports = {
   //PUT user
   updateUser(req, res) {
     User.findOneAndUpdate(
-      {_id: req.params.usereId},
+      { _id: Types.ObjectId(req.params.userId) },
       { $set: req.body },
       { runValidators: true, new: true }
     )
@@ -40,8 +44,9 @@ module.exports = {
   },
   //DELETE user
   deleteUser(req, res) {
-    User.findOneAndDelete({ _id: req.params.userId })
-      .then((user) => !user ? res.status(404).json({ message: 'No user with that ID'}) : Thought.deleteMany({ username: user.username}))
+    User.findOneAndDelete({ _id: Types.ObjectId(req.params.userId) })
+      .then((user) => !user ? res.status(404).json({ message: 'No user with that ID'}) : Thought.deleteMany({ _id: {$in: user.thoughts}}))
+      .then(() => res.json({ message: 'User and thoughts deleted!' }))
       .catch((err) => res.status(500).json(err));
   },
   //POST friend to user
@@ -49,8 +54,8 @@ module.exports = {
     console.log('You are adding a friend');
     console.log(req.body);
     User.findOneAndUpdate(
-      { _id: req.params.userId },
-      { $addToSet: { friends: req.params.friendId }},
+      { _id: Types.ObjectId(req.params.userId) },
+      { $addToSet: { friends: Types.ObjectId(req.params.friendId) }},
       { runValidators: true, new: true }
     )
     .then((user) => !user ? res.status(404).json({ message: 'No user with that ID'}) : res.json(user))
@@ -59,8 +64,8 @@ module.exports = {
   //DELETE friend from user
   deleteFriend(req, res) {
     User.findOneAndUpdate(
-      { _id: req.params.userId },
-      { $pull: { friends: req.params.friendId} },
+      { _id: Types.ObjectId(req.params.userId )},
+      { $pull: { friends: Types.ObjectId(req.params.friendId)} },
       { runValidators: true, new: true }
     )
     .then((user) => !user ? res.status(404).json({ message: 'No user with that ID'}) : res.json(user))

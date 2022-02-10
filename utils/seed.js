@@ -9,13 +9,12 @@ connection.once('open', async () => {
   await User.deleteMany({});
   await Thought.deleteMany({});
 
-  const users = [];
+  let users = [];
   let thoughts = [];
 
   for (let i = 0; i < 50; i++) {
     const username = getRandomUsername();
     const email = generateEmail(username);
-
     users.push({username, email});
 
     for (let i = 0; i < 5; i++) {

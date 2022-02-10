@@ -1,5 +1,5 @@
 function formatCreatedAt(timestamp) {
-  return `${timestamp.getMonth()}/${timestamp.getDate()}/${timeStamp.getFullYear()} ${timestamp.getHours()}:${timestamp.getMinutes()}:${timestamp.getSeconds()}`
+  return `${timestamp.getMonth()}/${timestamp.getDate()}/${timestamp.getFullYear()} ${timestamp.getHours()}:${timestamp.getMinutes()}:${timestamp.getSeconds()}`
 }
 
 module.exports = formatCreatedAt;
